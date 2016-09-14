@@ -1,0 +1,112 @@
+<?php
+/**
+ * Sassify module for ProcessWire CMS
+ * by Rudy Affandi (2016)
+ * https://github.com/lesaff
+ * MIT License
+ */
+
+namespace ProcessWire;
+require __DIR__ . '/vendor/autoload.php';
+
+use Leafo\ScssPhp\Compiler;
+
+class Sassify extends WireData implements Module {
+ 
+    // Init global configuration variables.
+    private static $sassFormatter;
+
+    /**
+     * ------------------------------------------------------------------------
+     * getModuleInfo is a module required by all modules to tell 
+     * ProcessWire about them
+     * ------------------------------------------------------------------------
+     * @return array
+     */
+    public static function getModuleInfo() 
+    {
+        return [
+            'title'    => "Sassify",
+            'version'  => "0.0.1",
+            'summary'  => "Compile SASS/SCSS/Compass and use it in your project.",
+            'author'   => "Rudy Affandi",
+            'href'     => "https://github.com/lesaff/ProcessWire-Sassify",
+            'icon'     => "css3",
+ 
+            // use autoload if module is to be called each load, if it is only needed to setup something set to false
+            'autoload' => true,
+            'singular' => true,
+            'requires' => "ProcessWire>=2.5",
+        ];
+    }
+
+    
+   //  public static function getModuleConfigInputfields(array $data) 
+   //  {
+   //  	// Initialize inputField wrapper
+   //  	$fields = new InputfieldWrapper(); 
+
+   //      // Define SASS formatter
+   //      $field              = wire('modules')->get('InputfieldSelect');
+   //      $field->name        = 'sass_formatter';
+   //      $field->label       = __('SASS Formatter');
+   //      $field->columnWidth = 33;
+   //      $field->value       = (!empty($data['sass_formatter'])) ? wire('sanitizer')->name($data['sass_formatter']) : 'Leafo\ScssPhp\Formatter\Nested';
+   //      $field->description = __('Set the output formatting of Sass compiler');
+   //      $field->addOptions([
+   //      	'Leafo\ScssPhp\Formatter\Expanded',
+			// 'Leafo\ScssPhp\Formatter\Nested',
+			// 'Leafo\ScssPhp\Formatter\Compressed',
+			// 'Leafo\ScssPhp\Formatter\Compact',
+			// 'Leafo\ScssPhp\Formatter\Crunched'
+   //      ]);
+   //      $fields->add($field);
+
+   //      return $fields; 
+
+   //  }
+
+    // Initialize default config in the constructor
+    public function __construct() 
+    {
+    	$this->sass_formatter = 'Leafo\ScssPhp\Formatter\Nested';
+    }
+
+
+    // Initialize the module
+    public function init() 
+    {
+
+        // Set module config
+        self::$sassFormatter = wire('sanitizer')->name($this->sass_formatter);
+
+    }
+
+
+    public static function css($stylesheets)
+    {
+    	
+    	// Initialize compiler
+		$scss = new Compiler();
+
+		// Settings
+		$templatePath = wire('config')->paths->templates;
+		$sassPath = wire('config')->paths->templates . 'sass/';
+		$cssPath = wire('config')->paths->templates . 'styles/';
+		$cssUrl = wire('config')->urls->templates . 'styles/';
+
+		// Set output format
+		$scss->setFormatter('Leafo\ScssPhp\Formatter\Nested');
+
+		// Compile it
+		$compiled = $scss->compile('@import "' . $templatePath . $stylesheets . '"');
+
+		// Save to template/styles
+		file_put_contents($cssPath . 'style.min.css', $compiled);
+
+		// Return saved file path
+		return $cssUrl . 'style.min.css';
+
+    }
+
+}

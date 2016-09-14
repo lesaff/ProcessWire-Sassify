@@ -1,0 +1,6 @@
+{
+    "require": {
+        "leafo/scssphp": "^0.6.6",
+        "symfony/var-dumper": "^3.1"
+    }
+}
