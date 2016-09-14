@@ -20,3 +20,7 @@ This module allows you to use SASS/SCSS/Compass with your ProcessWire templates.
 	'sass/style_3.scss',
 ]); ?>">
 ```
+
+# To Do #
+- [ ] Migrate all hardcoded settings to the control panel
+- [ ] Clean up code
