@@ -69,7 +69,7 @@ class Sassify extends WireData implements Module {
      *
      * @return     string  ( description_of_the_return_value )
      */
-    public static function css(array $stylesheets)
+    public static function css($stylesheets)
     {
     	
     	// Initialize compiler
@@ -82,6 +82,10 @@ class Sassify extends WireData implements Module {
         $scss->setNumberPrecision(self::$numberPrecision);
 
         // Iterate each stylesheet
+        if (! is_array($stylesheets)) {
+            $imports[] = '@import "' . self::$templatePath . $stylesheets . '"';
+        }
+
         foreach ($stylesheets as $stylesheet) {
             $imports[] = '@import "' . self::$templatePath . $stylesheet . '"';
         }
