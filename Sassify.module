@@ -6,7 +6,6 @@
  * MIT License
  */
 
-namespace ProcessWire;
 require __DIR__ . '/vendor/autoload.php';
 
 use Leafo\ScssPhp\Compiler;
@@ -14,7 +13,13 @@ use Leafo\ScssPhp\Compiler;
 class Sassify extends WireData implements Module {
  
     // Init global configuration variables.
-    private static $sassFormatter;
+    private static $cssFilename; 
+    private static $cssPath; 
+    private static $cssUrl; 
+    private static $numberPrecision;
+    private static $outputFormat;
+    private static $templatePath; 
+
 
     /**
      * ------------------------------------------------------------------------
@@ -27,7 +32,7 @@ class Sassify extends WireData implements Module {
     {
         return [
             'title'    => "Sassify",
-            'version'  => "0.0.1",
+            'version'  => "0.0.2",
             'summary'  => "Compile SASS/SCSS/Compass and use it in your project.",
             'author'   => "Rudy Affandi",
             'href'     => "https://github.com/lesaff/ProcessWire-Sassify",
@@ -41,72 +46,54 @@ class Sassify extends WireData implements Module {
     }
 
     
-   //  public static function getModuleConfigInputfields(array $data) 
-   //  {
-   //  	// Initialize inputField wrapper
-   //  	$fields = new InputfieldWrapper(); 
-
-   //      // Define SASS formatter
-   //      $field              = wire('modules')->get('InputfieldSelect');
-   //      $field->name        = 'sass_formatter';
-   //      $field->label       = __('SASS Formatter');
-   //      $field->columnWidth = 33;
-   //      $field->value       = (!empty($data['sass_formatter'])) ? wire('sanitizer')->name($data['sass_formatter']) : 'Leafo\ScssPhp\Formatter\Nested';
-   //      $field->description = __('Set the output formatting of Sass compiler');
-   //      $field->addOptions([
-   //      	'Leafo\ScssPhp\Formatter\Expanded',
-			// 'Leafo\ScssPhp\Formatter\Nested',
-			// 'Leafo\ScssPhp\Formatter\Compressed',
-			// 'Leafo\ScssPhp\Formatter\Compact',
-			// 'Leafo\ScssPhp\Formatter\Crunched'
-   //      ]);
-   //      $fields->add($field);
-
-   //      return $fields; 
-
-   //  }
-
-    // Initialize default config in the constructor
-    public function __construct() 
-    {
-    	$this->sass_formatter = 'Leafo\ScssPhp\Formatter\Nested';
-    }
-
-
-    // Initialize the module
+    /**
+     * Initialize module
+     */
     public function init() 
     {
 
         // Set module config
-        self::$sassFormatter = wire('sanitizer')->name($this->sass_formatter);
-
+        self::$cssFilename     = wire('sanitizer')->name($this->css_filename);
+        self::$cssPath         = $this->css_path;
+        self::$cssUrl          = $this->css_url;
+        self::$numberPrecision = $this->number_precision;
+        self::$outputFormat    = $this->sass_formatter;
+        self::$templatePath    = wire('config')->paths->templates;
     }
 
 
-    public static function css($stylesheets)
+    /**
+     * Process css, scss and sass and compile result
+     *
+     * @param      string  $stylesheets  The stylesheets
+     *
+     * @return     string  ( description_of_the_return_value )
+     */
+    public static function css(array $stylesheets)
     {
     	
     	// Initialize compiler
 		$scss = new Compiler();
 
-		// Settings
-		$templatePath = wire('config')->paths->templates;
-		$sassPath = wire('config')->paths->templates . 'sass/';
-		$cssPath = wire('config')->paths->templates . 'styles/';
-		$cssUrl = wire('config')->urls->templates . 'styles/';
+        // Set output format
+        $scss->setFormatter(self::$outputFormat);
 
-		// Set output format
-		$scss->setFormatter('Leafo\ScssPhp\Formatter\Nested');
+        // Set number precision
+        $scss->setNumberPrecision(self::$numberPrecision);
 
-		// Compile it
-		$compiled = $scss->compile('@import "' . $templatePath . $stylesheets . '"');
+        // Iterate each stylesheet
+        foreach ($stylesheets as $stylesheet) {
+            $imports[] = '@import "' . self::$templatePath . $stylesheet . '"';
+        }
+
+        // Compile it
+        $compiled = $scss->compile(implode(';', $imports));
 
 		// Save to template/styles
-		file_put_contents($cssPath . 'style.min.css', $compiled);
+		file_put_contents(self::$cssPath . self::$cssFilename . '.css', $compiled);
 
 		// Return saved file path
-		return $cssUrl . 'style.min.css';
-
+		return self::$cssUrl . self::$cssFilename . '.css';
     }
 
 }

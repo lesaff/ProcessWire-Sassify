@@ -21,6 +21,5 @@ This module allows you to use SASS/SCSS/Compass with your ProcessWire templates.
 ]); ?>">
 ```
 
-# To Do #
-- [ ] Migrate all hardcoded settings to the control panel
-- [ ] Clean up code
+# Bugs/Issues #
+- Please use [Github Issues](https://github.com/lesaff/ProcessWire-Sassify/issues) to file issues

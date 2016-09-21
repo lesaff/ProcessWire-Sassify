@@ -1,0 +1,104 @@
+<h4>Output Format Guide</h4>
+
+<div style="padding:20px;background:#555;color:#eee;">
+<p>Given the following CSS/SCSS/SASS input:</p>
+<pre style="line-height:13px;"><code style="font-size:11px">
+/*! Comment */
+.navigation {
+ul {
+line-height: 20px;
+color: blue;
+a {
+color: red;
+}
+}
+}
+
+.footer {
+.copyright {
+color: silver;
+}
+}
+</code></pre>
+</div>
+
+<table width="100%" cellspacing="10" cellpadding="5">
+<tbody>
+<tr valign="top">
+<td style="padding:20px;background:#555;color:#eee;">
+<strong>Expanded</strong>
+<p>Will ouput the following:</p>
+<pre style="line-height:13px;"><code style="font-size:11px">
+/*! Comment */
+.navigation ul {
+line-height: 20px;
+color: blue;
+}
+.navigation ul a {
+color: red;
+}
+.footer .copyright {
+color: silver;
+}
+</code></pre>
+</td>
+
+<td style="padding:20px;background:#555;color:#eee;">
+<strong>Nested</strong>
+<p>Will ouput the following:</p>
+
+<pre style="line-height:13px;"><code style="font-size:11px">
+/*! Comment */
+.navigation ul {
+line-height: 20px;
+color: blue; }
+.navigation ul a {
+color: red; }
+
+.footer .copyright {
+color: silver; }
+</code></pre>
+</td>
+
+<td style="padding:20px;background:#555;color:#eee;">
+<strong>Compact</strong>
+<p>Will ouput the following:</p>
+
+<pre style="line-height:13px;"><code style="font-size:11px">
+/*! Comment */
+.navigation ul { line-height:20px; color:blue; }
+
+.navigation ul a { color:red; }
+
+.footer .copyright { color:silver; }
+</code></pre>
+</td>
+</tr>
+
+<tr>
+<td colspan="3" style="padding:20px;background:#555;color:#eee;">
+<strong>Compressed</strong>
+<p>Will ouput the following:</p>
+
+<pre style="line-height:13px;"><code style="font-size:11px">
+/* Comment*/.navigation ul{line-height:20px;color:blue;}.navigation ul a{color:red;}.footer .copyright{color:silver;}
+</code></pre>
+
+</td>
+</tr>
+
+<tr>
+<td colspan="3" style="padding:20px;background:#555;color:#eee;">
+<strong>Crunched</strong>
+<p>Will ouput the following:</p>
+
+<pre style="line-height:13px;"><code style="font-size:11px">
+.navigation ul{line-height:20px;color:blue;}.navigation ul a{color:red;}.footer .copyright{color:silver;}
+</code></pre>
+
+</td>
+</tr>
+
+
+</tbody>
+</table>
