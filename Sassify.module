@@ -9,15 +9,20 @@
 require __DIR__ . '/vendor/autoload.php';
 
 use Leafo\ScssPhp\Compiler;
+use Leafo\ScssPhp\Server;
+use Leafo\ScssPhp\Exception;
 
 class Sassify extends WireData implements Module {
  
     // Init global configuration variables.
+    private static $cacheFolder; 
     private static $cssFilename; 
+    private static $cssFolder; 
     private static $cssPath; 
     private static $cssUrl; 
     private static $numberPrecision;
     private static $outputFormat;
+    private static $sassFolder; 
     private static $templatePath; 
 
 
@@ -32,7 +37,7 @@ class Sassify extends WireData implements Module {
     {
         return [
             'title'    => "Sassify",
-            'version'  => "0.0.2",
+            'version'  => "0.0.4",
             'summary'  => "Compile SASS/SCSS/Compass and use it in your project.",
             'author'   => "Rudy Affandi",
             'href'     => "https://github.com/lesaff/ProcessWire-Sassify",
@@ -41,6 +46,11 @@ class Sassify extends WireData implements Module {
             // use autoload if module is to be called each load, if it is only needed to setup something set to false
             'autoload' => true,
             'singular' => true,
+            'page' => [
+                'name' => 'sassify',
+                'parent' => 'setup',
+                'title' => 'Sassify Settings',
+            ],
             'requires' => "ProcessWire>=2.5",
         ];
     }
@@ -54,11 +64,14 @@ class Sassify extends WireData implements Module {
 
         // Set module config
         self::$cssFilename     = wire('sanitizer')->name($this->css_filename);
-        self::$cssPath         = $this->css_path;
-        self::$cssUrl          = $this->css_url;
-        self::$numberPrecision = $this->number_precision;
-        self::$outputFormat    = $this->sass_formatter;
+        self::$cssFolder       = wire('sanitizer')->pageName($this->css_folder, true);
+        self::$sassFolder      = wire('sanitizer')->pageName($this->sass_folder, true);
         self::$templatePath    = wire('config')->paths->templates;
+        self::$cssPath         = wire('config')->paths->templates . self::$cssFolder . '/';
+        self::$cssUrl          = wire('sanitizer')->pagePathName($this->css_url);
+        self::$numberPrecision = intval($this->css_number_precision);
+        self::$outputFormat    = $this->sass_formatter;
+
     }
 
 
@@ -72,32 +85,96 @@ class Sassify extends WireData implements Module {
     public static function css($stylesheets)
     {
     	
-    	// Initialize compiler
-		$scss = new Compiler();
+        /**
+         * Only compile when there's changes
+         * 
+         * Added per 
+         * https://processwire.com/talk/topic/14297-announcing-sassify/?do=findComment&comment=128708
+         * 
+         */
 
-        // Set output format
-        $scss->setFormatter(self::$outputFormat);
+        // get timestamp of most recently modified SCSS file
+        $files = glob( self::$templatePath . 'sass/*.scss' );
 
-        // Set number precision
-        $scss->setNumberPrecision(self::$numberPrecision);
+        $times = array_map('filemtime', $files);
 
-        // Iterate each stylesheet
-        if (! is_array($stylesheets)) {
-            $imports[] = '@import "' . self::$templatePath . $stylesheets . '"';
+        arsort($times);
+        $scss_time = current($times);
+
+        // get timestamp of CSS file
+        $css_file = self::$cssPath . self::$cssFilename . '.css';
+
+        if (file_exists($css_file)) {
+            $css_time = filemtime($css_file);
         }
 
-        foreach ($stylesheets as $stylesheet) {
-            $imports[] = '@import "' . self::$templatePath . $stylesheet . '"';
+        // if no CSS file or SCSS newer than CSS file...
+        if( !isset($css_time) || $scss_time > $css_time ) {
+
+            // Initialize compiler
+            $scss = new Compiler();
+
+            // Set output format
+            $scss->setFormatter(self::$outputFormat);
+
+            // Set number precision
+            $scss->setNumberPrecision(self::$numberPrecision);
+
+            // Iterate each stylesheet
+            if (! is_array($stylesheets)) {
+                $imports[] = '@import "' . self::$templatePath . $stylesheets . '"';
+            }
+
+            foreach ($stylesheets as $stylesheet) {
+                $imports[] = '@import "' . self::$templatePath . $files . '"';
+            }
+
+            // Compile it
+            try {
+                $compiled = $scss->compile(implode(';', $imports));
+            } catch(Exception $e) {
+                $this->error('Sassify Error: ' . $e);
+            }
+
+            // Save to template/styles
+            file_put_contents(self::$cssPath . self::$cssFilename . '.css', $compiled);
+
+            // Return saved file path
+            return self::$cssUrl . self::$cssFilename . '.css?' . $scss_time;
+        } else {
+            // Return saved file path
+            return self::$cssUrl . self::$cssFilename . '.css?' . $css_time;
         }
 
-        // Compile it
-        $compiled = $scss->compile(implode(';', $imports));
+    }
 
-		// Save to template/styles
-		file_put_contents(self::$cssPath . self::$cssFilename . '.css', $compiled);
 
-		// Return saved file path
-		return self::$cssUrl . self::$cssFilename . '.css';
+    /**
+     * Construct
+     * 
+     */
+    public function __construct()
+    {
+
+    }
+
+
+    /**
+     * Create the cache folder in the Assets folder at module installation.
+     * 
+     */
+    public function ___install()
+    {
+
+    }
+
+    /**
+     * Remove the cache folder in the Assets folder at module uninstallation.
+     * 
+     */
+    public function ___uninstall()
+    {
+
     }
 
 }

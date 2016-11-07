@@ -31,12 +31,25 @@ class SassifyConfig extends ModuleConfig {
 		// Initiate CP input fields
     	$inputfields = parent::getInputfields();
 
-    	// CSS Folder location
+    	// SASS Folder location
 	    $f = $this->modules->get('InputfieldText');
-	    $f->attr('name', 'css_path');
-	    $f->label = 'CSS Folder Path';
+        $f->columnWidth = 50;
+	    $f->attr('name', 'sass_folder');
+	    $f->label = 'SASS/SCSS Folder Name';
+        $f->description = 'Enter your SASS folder name in your templates folder';
+        $f->notes = 'Sassify will grab all scss/sass files from this folder';
 	    $f->required = true;
 	    $inputfields->add($f);
+
+        // CSS Folder location
+        $f = $this->modules->get('InputfieldText');
+        $f->columnWidth = 50;
+        $f->attr('name', 'css_folder');
+        $f->label = 'CSS Folder Name';
+        $f->description = 'Enter your CSS folder name in your templates folder';
+        $f->notes = 'Sassify will store your compiled CSS file here';
+        $f->required = true;
+        $inputfields->add($f);
 
     	// CSS URL location
 	    $f = $this->modules->get('InputfieldText');
