@@ -69,6 +69,9 @@ class Sassify extends WireData implements Module {
         self::$numberPrecision = intval($this->css_number_precision);
         self::$outputFormat    = $this->sass_formatter;
         self::$templatePath    = wire('config')->paths->templates;
+
+        // Add a hook to compile sass from admin
+        $this->addHookAfter('Page::render', $this, 'CompileSassFromAdmin');
     }
     /**
      * Does the compiling magic
@@ -158,6 +161,17 @@ class Sassify extends WireData implements Module {
         // We don't have a css file, so lets make one.
         } else {
            self::doCompile();
+        }
+    }
+
+    // Check if we are in the admin template and have been asked to compile
+    protected static function CompileSassFromAdmin($event) {
+
+        if(wire('input')->get('sass') == 'compile' AND $event->object->template == 'admin') {
+            self::sassifyAll();
+
+            // Redirect to module page
+            wire('session')->redirect($event->object->httpUrl.'edit?name='.wire('input')->get('name'));
         }
     }
 
