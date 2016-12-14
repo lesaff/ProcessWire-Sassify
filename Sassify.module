@@ -85,7 +85,7 @@ class Sassify extends WireData implements Module {
         $scssIn = file_get_contents( self::$sassPath . self::$sassEntry );
         $cssOut = $scss->compile($scssIn);
         if ($cssOut) {
-            file_put_contents(self::$cssPath . self::$cssFilename . '.css', $cssOut);
+            file_put_contents(self::$cssPath . self::$cssFilename, $cssOut);
             return true;
         } else {
             return false;
@@ -129,10 +129,10 @@ class Sassify extends WireData implements Module {
         }
 
     // Save to template/styles
-    file_put_contents(self::$cssPath . self::$cssFilename . '.css', $compiled);
+    file_put_contents(self::$cssPath . self::$cssFilename, $compiled);
 
     // Return saved file path
-    return self::$cssUrl . self::$cssFilename . '.css';
+    return self::$cssUrl . self::$cssFilename;
     }
     /**
      * Process all scss files into a single .css file.
@@ -146,7 +146,7 @@ class Sassify extends WireData implements Module {
         $scss_time = current($times);
 
         // get timestamp of CSS file
-        $css_file = self::$cssPath . self::$cssFilename . '.css';
+        $css_file = self::$cssPath . self::$cssFilename;
 
         // If we've already got a css file, check its time.
         if (file_exists($css_file)) {
