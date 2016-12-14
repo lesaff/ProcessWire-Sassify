@@ -20,9 +20,9 @@ class SassifyConfig extends ModuleConfig {
     	return [
       		'css_path'       => wire('config')->paths->templates . 'styles/',
       		'css_url'        => wire('config')->urls->templates . 'styles/',
-      		'css_filename'   => 'styles.css',
-            	'sass_path'   => wire('config')->paths->templates . 'sass/',
-            	'sass_entry'   => 'main.scss',
+      		'css_filename'   => 'styles',
+            'sass_path'   => wire('config')->paths->templates . 'sass/',
+            'sass_entry'   => 'main.scss',
       		'sass_formatter' => 'Leafo\ScssPhp\Formatter\Nested',
     	];
   	}
@@ -32,6 +32,23 @@ class SassifyConfig extends ModuleConfig {
 
 		// Initiate CP input fields
     	$inputfields = parent::getInputfields();
+
+        // Compile Sass Button Area
+        $f              = $this->modules->get('InputfieldMarkup');
+        $f->columnWidth = 25;
+        $f->label       = __('Compile Sass');
+        $f->description = __('Compile all your sass.');
+
+        // The actual button
+        $f_button           = $this->modules->get('InputfieldButton');
+        $f_button->name     = 'compile_sass';
+        $f_button->value    = __('Compile SASS');
+        $f_button->href     = 'edit?name='.wire('input')->get('name').'&sass=compile';
+
+        $f->add($f_button);
+        $inputfields->add($f);
+
+
 
     	// CSS Folder location
 	    $f = $this->modules->get('InputfieldText');
