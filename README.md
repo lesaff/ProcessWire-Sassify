@@ -1,4 +1,5 @@
 # ProcessWire Sassify #
+![Version 0.0.4](https://img.shields.io/badge/Version-0.0.4-green.svg)
 
 This module allows you to use SASS/SCSS/Compass with your ProcessWire templates.
 

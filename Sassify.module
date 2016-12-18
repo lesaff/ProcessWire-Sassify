@@ -176,4 +176,3 @@ class Sassify extends WireData implements Module {
     }
 
 }
-
