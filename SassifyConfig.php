@@ -21,35 +21,41 @@ class SassifyConfig extends ModuleConfig {
       		'css_path'       => wire('config')->paths->templates . 'styles/',
       		'css_url'        => wire('config')->urls->templates . 'styles/',
       		'css_filename'   => 'styles',
+            'sass_path'   => wire('config')->paths->templates . 'sass/',
+            'sass_entry'   => 'main.scss',
       		'sass_formatter' => 'Leafo\ScssPhp\Formatter\Nested',
     	];
   	}
 
 
 	public function getInputfields() {
-    	
+
 		// Initiate CP input fields
     	$inputfields = parent::getInputfields();
 
-    	// SASS Folder location
+        // Compile Sass Button Area
+        $f              = $this->modules->get('InputfieldMarkup');
+        $f->columnWidth = 25;
+        $f->label       = __('Compile Sass');
+        $f->description = __('Compile all your sass.');
+
+        // The actual button
+        $f_button           = $this->modules->get('InputfieldButton');
+        $f_button->name     = 'compile_sass';
+        $f_button->value    = __('Compile SASS');
+        $f_button->href     = 'edit?name='.wire('input')->get('name').'&sass=compile';
+
+        $f->add($f_button);
+        $inputfields->add($f);
+
+
+
+    	// CSS Folder location
 	    $f = $this->modules->get('InputfieldText');
-        $f->columnWidth = 50;
-	    $f->attr('name', 'sass_folder');
-	    $f->label = 'SASS/SCSS Folder Name';
-        $f->description = 'Enter your SASS folder name in your templates folder';
-        $f->notes = 'Sassify will grab all scss/sass files from this folder';
+	    $f->attr('name', 'css_path');
+	    $f->label = 'CSS Folder Path';
 	    $f->required = true;
 	    $inputfields->add($f);
-
-        // CSS Folder location
-        $f = $this->modules->get('InputfieldText');
-        $f->columnWidth = 50;
-        $f->attr('name', 'css_folder');
-        $f->label = 'CSS Folder Name';
-        $f->description = 'Enter your CSS folder name in your templates folder';
-        $f->notes = 'Sassify will store your compiled CSS file here';
-        $f->required = true;
-        $inputfields->add($f);
 
     	// CSS URL location
 	    $f = $this->modules->get('InputfieldText');
@@ -67,6 +73,22 @@ class SassifyConfig extends ModuleConfig {
 	    $f->required = true;
 	    $inputfields->add($f);
 
+        // SASS Folder location
+        $f = $this->modules->get('InputfieldText');
+        $f->columnWidth = 50;
+        $f->attr('name', 'sass_path');
+        $f->label = 'SCSS Folder Path';
+        $f->required = true;
+        $inputfields->add($f);
+
+        // SASS Entry location
+        $f = $this->modules->get('InputfieldText');
+        $f->columnWidth = 50;
+        $f->attr('name', 'sass_entry');
+        $f->label = 'SCSS Entry Filename';
+        $f->required = true;
+        $inputfields->add($f);
+
     	// SASS Compiler number precision
 	    $f = $this->modules->get('InputfieldSelect');
         $f->columnWidth = 50;
@@ -74,10 +96,10 @@ class SassifyConfig extends ModuleConfig {
 	    $f->label = 'Set how many digits of precision to use when outputting decimal numbers';
     	$f->options = [
         	'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
-        ]; 
+        ];
         $inputfields->add($f);
 
- 		// SASS Compiler formatting 
+ 		// SASS Compiler formatting
  		$f = $this->modules->get('InputfieldSelect');
         $f->columnWidth = 50;
     	$f->attr('name', 'sass_formatter');

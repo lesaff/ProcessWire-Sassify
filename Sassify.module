@@ -9,40 +9,38 @@
 require __DIR__ . '/vendor/autoload.php';
 
 use Leafo\ScssPhp\Compiler;
-use Leafo\ScssPhp\Server;
 use Leafo\ScssPhp\Exception;
 
 class Sassify extends WireData implements Module {
- 
+
     // Init global configuration variables.
-    private static $cacheFolder; 
-    private static $cssFilename; 
-    private static $cssFolder; 
-    private static $cssPath; 
-    private static $cssUrl; 
+    private static $cssFilename;
+    private static $cssPath;
+    private static $cssUrl;
+    private static $sassPath;
+    private static $sassEntry;
     private static $numberPrecision;
     private static $outputFormat;
-    private static $sassFolder; 
-    private static $templatePath; 
+    private static $templatePath;
 
 
     /**
      * ------------------------------------------------------------------------
-     * getModuleInfo is a module required by all modules to tell 
+     * getModuleInfo is a module required by all modules to tell
      * ProcessWire about them
      * ------------------------------------------------------------------------
      * @return array
      */
-    public static function getModuleInfo() 
+    public static function getModuleInfo()
     {
         return [
             'title'    => "Sassify",
-            'version'  => "0.0.4",
+            'version'  => "0.0.3",
             'summary'  => "Compile SASS/SCSS/Compass and use it in your project.",
             'author'   => "Rudy Affandi",
             'href'     => "https://github.com/lesaff/ProcessWire-Sassify",
             'icon'     => "css3",
- 
+
             // use autoload if module is to be called each load, if it is only needed to setup something set to false
             'autoload' => true,
             'singular' => true,
@@ -55,23 +53,46 @@ class Sassify extends WireData implements Module {
         ];
     }
 
-    
+
     /**
      * Initialize module
      */
-    public function init() 
+    public function init()
     {
 
         // Set module config
         self::$cssFilename     = wire('sanitizer')->name($this->css_filename);
-        self::$cssFolder       = wire('sanitizer')->pageName($this->css_folder, true);
-        self::$sassFolder      = wire('sanitizer')->pageName($this->sass_folder, true);
-        self::$templatePath    = wire('config')->paths->templates;
-        self::$cssPath         = wire('config')->paths->templates . self::$cssFolder . '/';
-        self::$cssUrl          = wire('sanitizer')->pagePathName($this->css_url);
+        self::$cssPath         = $this->css_path;
+        self::$cssUrl          = $this->css_url;
+        self::$sassPath        = $this->sass_path;
+        self::$sassEntry       = $this->sass_entry;
         self::$numberPrecision = intval($this->css_number_precision);
         self::$outputFormat    = $this->sass_formatter;
+        self::$templatePath    = wire('config')->paths->templates;
 
+        // Add a hook to compile sass from admin
+        $this->addHookAfter('Page::render', $this, 'CompileSassFromAdmin');
+    }
+    /**
+     * Does the compiling magic
+     * @return returns true if success
+     */
+    public static function doCompile(){
+        // Initialize compiler
+        $scss = new Compiler();
+        // Set output format
+        $scss->setFormatter(self::$outputFormat);
+        // Set number precision
+        $scss->setNumberPrecision(self::$numberPrecision);
+        $scss->addImportPath( self::$sassPath );
+        $scssIn = file_get_contents( self::$sassPath . self::$sassEntry );
+        $cssOut = $scss->compile($scssIn);
+        if ($cssOut) {
+            file_put_contents(self::$cssPath . self::$cssFilename, $cssOut);
+            return true;
+        } else {
+            return false;
+        }
     }
 
 
@@ -84,97 +105,74 @@ class Sassify extends WireData implements Module {
      */
     public static function css($stylesheets)
     {
-    	
-        /**
-         * Only compile when there's changes
-         * 
-         * Added per 
-         * https://processwire.com/talk/topic/14297-announcing-sassify/?do=findComment&comment=128708
-         * 
-         */
 
+        // Initialize compiler
+    $scss = new Compiler();
+
+        // Set output format
+        $scss->setFormatter(self::$outputFormat);
+
+        // Set number precision
+        $scss->setNumberPrecision(self::$numberPrecision);
+
+        // Iterate each stylesheet
+        if (! is_array($stylesheets)) {
+            $imports[] = '@import "' . self::$templatePath . $stylesheets . '"';
+        }
+
+        foreach ($stylesheets as $stylesheet) {
+            $imports[] = '@import "' . self::$templatePath . $stylesheet . '"';
+        }
+
+        // Compile it
+        try {
+            $compiled = $scss->compile(implode(';', $imports));
+        } catch(Exception $e) {
+            $this->error('Sassify Error: ' . $e);
+        }
+
+    // Save to template/styles
+    file_put_contents(self::$cssPath . self::$cssFilename, $compiled);
+
+    // Return saved file path
+    return self::$cssUrl . self::$cssFilename;
+    }
+    /**
+     * Process all scss files into a single .css file.
+     * @return No return
+     */
+    public static function sassifyAll() {
         // get timestamp of most recently modified SCSS file
-        $files = glob( self::$templatePath . 'sass/*.scss' );
-
+        $files = glob( self::$sassPath );
         $times = array_map('filemtime', $files);
-
         arsort($times);
         $scss_time = current($times);
 
         // get timestamp of CSS file
-        $css_file = self::$cssPath . self::$cssFilename . '.css';
+        $css_file = self::$cssPath . self::$cssFilename;
 
+        // If we've already got a css file, check its time.
         if (file_exists($css_file)) {
             $css_time = filemtime($css_file);
-        }
-
-        // if no CSS file or SCSS newer than CSS file...
-        if( !isset($css_time) || $scss_time > $css_time ) {
-
-            // Initialize compiler
-            $scss = new Compiler();
-
-            // Set output format
-            $scss->setFormatter(self::$outputFormat);
-
-            // Set number precision
-            $scss->setNumberPrecision(self::$numberPrecision);
-
-            // Iterate each stylesheet
-            if (! is_array($stylesheets)) {
-                $imports[] = '@import "' . self::$templatePath . $stylesheets . '"';
+            // Check if the latet sass file is newer than the css file
+            if( !isset($css_time) || $scss_time > $css_time ) {
+                self::doCompile();
             }
-
-            foreach ($stylesheets as $stylesheet) {
-                $imports[] = '@import "' . self::$templatePath . $files . '"';
-            }
-
-            // Compile it
-            try {
-                $compiled = $scss->compile(implode(';', $imports));
-            } catch(Exception $e) {
-                $this->error('Sassify Error: ' . $e);
-            }
-
-            // Save to template/styles
-            file_put_contents(self::$cssPath . self::$cssFilename . '.css', $compiled);
-
-            // Return saved file path
-            return self::$cssUrl . self::$cssFilename . '.css?' . $scss_time;
+        // We don't have a css file, so lets make one.
         } else {
-            // Return saved file path
-            return self::$cssUrl . self::$cssFilename . '.css?' . $css_time;
+           self::doCompile();
         }
-
     }
 
+    // Check if we are in the admin template and have been asked to compile
+    protected static function CompileSassFromAdmin($event) {
 
-    /**
-     * Construct
-     * 
-     */
-    public function __construct()
-    {
+        if(wire('input')->get('sass') == 'compile' AND $event->object->template == 'admin') {
+            self::sassifyAll();
 
-    }
-
-
-    /**
-     * Create the cache folder in the Assets folder at module installation.
-     * 
-     */
-    public function ___install()
-    {
-
-    }
-
-    /**
-     * Remove the cache folder in the Assets folder at module uninstallation.
-     * 
-     */
-    public function ___uninstall()
-    {
-
+            // Redirect to module page
+            wire('session')->redirect($event->object->httpUrl.'edit?name='.wire('input')->get('name'));
+        }
     }
 
 }
