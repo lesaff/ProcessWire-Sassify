@@ -143,7 +143,7 @@ class Sassify extends WireData implements Module {
      */
     public static function sassifyAll() {
         // get timestamp of most recently modified SCSS file
-        $files = glob( self::$sassPath );
+        $files = glob( self::$sassPath . '*' );
         $times = array_map('filemtime', $files);
         arsort($times);
         $scss_time = current($times);
