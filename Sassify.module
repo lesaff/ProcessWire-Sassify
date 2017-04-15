@@ -35,7 +35,7 @@ class Sassify extends WireData implements Module {
     {
         return [
             'title'    => "Sassify",
-            'version'  => "0.0.3",
+            'version'  => "0.0.5",
             'summary'  => "Compile SASS/SCSS/Compass and use it in your project.",
             'author'   => "Rudy Affandi",
             'href'     => "https://github.com/lesaff/ProcessWire-Sassify",
