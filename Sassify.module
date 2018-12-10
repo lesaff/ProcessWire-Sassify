@@ -1,4 +1,4 @@
-<?php
+<?php namespace ProcessWire;
 /**
  * Sassify module for ProcessWire CMS
  * by Rudy Affandi (2016)
