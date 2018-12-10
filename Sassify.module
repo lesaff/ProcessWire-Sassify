@@ -119,9 +119,10 @@ class Sassify extends WireData implements Module {
         if (! is_array($stylesheets)) {
             $imports[] = '@import "' . self::$templatePath . $stylesheets . '"';
         }
-
-        foreach ($stylesheets as $stylesheet) {
-            $imports[] = '@import "' . self::$templatePath . $stylesheet . '"';
+        else {
+            foreach ($stylesheets as $stylesheet) {
+                $imports[] = '@import "' . self::$templatePath . $stylesheet . '"';
+            }
         }
 
         // Compile it
