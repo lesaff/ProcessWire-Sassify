@@ -1,4 +1,4 @@
-<?php
+<?php namespace ProcessWire;
 /**
  * Sassify module for ProcessWire CMS
  * by Rudy Affandi (2016)
@@ -35,7 +35,7 @@ class Sassify extends WireData implements Module {
     {
         return [
             'title'    => "Sassify",
-            'version'  => "0.0.5",
+            'version'  => "0.0.6",
             'summary'  => "Compile SASS/SCSS/Compass and use it in your project.",
             'author'   => "Rudy Affandi",
             'href'     => "https://github.com/lesaff/ProcessWire-Sassify",
@@ -119,9 +119,10 @@ class Sassify extends WireData implements Module {
         if (! is_array($stylesheets)) {
             $imports[] = '@import "' . self::$templatePath . $stylesheets . '"';
         }
-
-        foreach ($stylesheets as $stylesheet) {
-            $imports[] = '@import "' . self::$templatePath . $stylesheet . '"';
+        else {
+            foreach ($stylesheets as $stylesheet) {
+                $imports[] = '@import "' . self::$templatePath . $stylesheet . '"';
+            }
         }
 
         // Compile it

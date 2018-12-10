@@ -1,4 +1,4 @@
-<?php
+<?php namespace ProcessWire;
 /**
  * Sassify module for ProcessWire CMS
  * by Rudy Affandi (2016)
@@ -20,7 +20,7 @@ class SassifyConfig extends ModuleConfig {
     	return [
       		'css_path'       => wire('config')->paths->templates . 'styles/',
       		'css_url'        => wire('config')->urls->templates . 'styles/',
-      		'css_filename'   => 'styles',
+      		'css_filename'   => 'styles.css',
             'sass_path'   => wire('config')->paths->templates . 'sass/',
             'sass_entry'   => 'main.scss',
       		'sass_formatter' => 'Leafo\ScssPhp\Formatter\Nested',
